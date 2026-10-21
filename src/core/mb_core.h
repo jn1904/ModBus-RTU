@@ -14,8 +14,7 @@
 #include "modbus.h"
 
 /* 帧内字段位置（RTU ADU：地址, PDU, CRC16）。 */
-enum
-{
+enum{
     MB_F_ID       = 0,   /* 从站地址                         */
     MB_F_FUNC     = 1,   /* 功能码                           */
     MB_F_ADD_HI   = 2,   /* 地址高字节                       */
@@ -46,8 +45,7 @@ uint16_t mb_crc16(const uint8_t *buf, uint16_t len);
 
 /* --- 内存映像（map.c） ------------------------------------------------ */
 
-typedef enum mb_area
-{
+typedef enum mb_area{
     MB_AREA_COILS = 0,
     MB_AREA_DISCRETE,
     MB_AREA_INPUT,

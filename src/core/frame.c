@@ -28,12 +28,10 @@
 #define MB_MULTI_WRITE_MIN_LEN 10u
 
 /* 校验帧尾的 CRC16（线上为低字节在前）。 */
-static bool mb_frame_crc_ok(const mb_frame_t *f)
-{
+static bool mb_frame_crc_ok(const mb_frame_t *f){
     uint16_t crc;
 
-    if (f->len < 4u)
-    {
+    if (f->len < 4u){
         return false;
     }
 
@@ -43,12 +41,10 @@ static bool mb_frame_crc_ok(const mb_frame_t *f)
         && (f->buf[f->len - 1u] == (uint8_t)((crc >> 8) & 0x00FFu));
 }
 
-void mb_frame_seal(mb_frame_t *f)
-{
+void mb_frame_seal(mb_frame_t *f){
     uint16_t crc;
 
-    if (f == NULL || (uint16_t)(f->len + 2u) > (uint16_t)MB_MAX_FRAME)
-    {
+    if (f == NULL || (uint16_t)(f->len + 2u) > (uint16_t)MB_MAX_FRAME){
         return;
     }
 
@@ -59,8 +55,7 @@ void mb_frame_seal(mb_frame_t *f)
     f->len = (uint16_t)(f->len + 2u);
 }
 
-mb_err_t mb_frame_validate_request(mb_frame_t *f, const mb_map_t *map)
-{
+mb_err_t mb_frame_validate_request(mb_frame_t *f, const mb_map_t *map){
     uint8_t  fc;
     uint16_t addr;
     uint16_t count;      /* 帧里的"数量"字段；FC5/FC6 时它放的是"取值" */
@@ -70,18 +65,15 @@ mb_err_t mb_frame_validate_request(mb_frame_t *f, const mb_map_t *map)
     uint32_t span;
     const mb_region_t *region;
 
-    if (f == NULL)
-    {
+    if (f == NULL){
         return MB_ERR_BAD_SIZE;
     }
 
     /* 太短或 CRC 不对，属于链路层问题：从站必须保持静默。 */
-    if (f->len < MB_REQ_MIN_LEN)
-    {
+    if (f->len < MB_REQ_MIN_LEN){
         return MB_ERR_BAD_SIZE;
     }
-    if (!mb_frame_crc_ok(f))
-    {
+    if (!mb_frame_crc_ok(f)){
         return MB_ERR_BAD_CRC;
     }
 
@@ -90,30 +82,26 @@ mb_err_t mb_frame_validate_request(mb_frame_t *f, const mb_map_t *map)
     count = mb_word(f->buf[MB_F_NB_HI],  f->buf[MB_F_NB_LO]);
 
     /* 先按功能码核对帧长：长度对不上就没必要继续解析。 */
-    switch (fc)
-    {
+    switch (fc){
     case MB_FC_READ_COILS:
     case MB_FC_READ_DISCRETE_INPUTS:
     case MB_FC_READ_HOLDING_REGS:
     case MB_FC_READ_INPUT_REGS:
     case MB_FC_WRITE_COIL:
     case MB_FC_WRITE_REG:
-        if (f->len != MB_REQ_MIN_LEN)
-        {
+        if (f->len != MB_REQ_MIN_LEN){
             return MB_ERR_BAD_SIZE;
         }
         break;
 
     case MB_FC_WRITE_COILS:
     case MB_FC_WRITE_REGS:
-        if (f->len < MB_MULTI_WRITE_MIN_LEN)
-        {
+        if (f->len < MB_MULTI_WRITE_MIN_LEN){
             return MB_ERR_BAD_SIZE;
         }
         byte_count = f->buf[MB_F_BYTE_CNT];
         /* 整帧长度必须是 9 + 字节数（地址1 + 功能码1 + 地址2 + 数量2 + 字节数1 + 载荷 + CRC2）。 */
-        if (f->len != (uint16_t)(MB_REQ_MIN_LEN + 1u + byte_count))
-        {
+        if (f->len != (uint16_t)(MB_REQ_MIN_LEN + 1u + byte_count)){
             return MB_ERR_BAD_SIZE;
         }
         break;
@@ -126,49 +114,41 @@ mb_err_t mb_frame_validate_request(mb_frame_t *f, const mb_map_t *map)
     quantity = ((fc == MB_FC_WRITE_COIL) || (fc == MB_FC_WRITE_REG)) ? 1u : count;
 
     /* 数量与取值的合法性。 */
-    switch (fc)
-    {
+    switch (fc){
     case MB_FC_READ_COILS:
     case MB_FC_READ_DISCRETE_INPUTS:
-        if (count < 1u || count > MB_MAX_READ_BITS)
-        {
+        if (count < 1u || count > MB_MAX_READ_BITS){
             return MB_EXC_REGS_QUANT;
         }
         break;
 
     case MB_FC_READ_HOLDING_REGS:
     case MB_FC_READ_INPUT_REGS:
-        if (count < 1u || count > MB_MAX_READ_REGS)
-        {
+        if (count < 1u || count > MB_MAX_READ_REGS){
             return MB_EXC_REGS_QUANT;
         }
         break;
 
     case MB_FC_WRITE_COIL:
-        if (count != MB_COIL_ON && count != MB_COIL_OFF)
-        {
+        if (count != MB_COIL_ON && count != MB_COIL_OFF){
             return MB_EXC_REGS_QUANT;
         }
         break;
 
     case MB_FC_WRITE_COILS:
-        if (count < 1u || count > MB_MAX_WRITE_BITS)
-        {
+        if (count < 1u || count > MB_MAX_WRITE_BITS){
             return MB_EXC_REGS_QUANT;
         }
-        if ((uint16_t)((count + 7u) / 8u) != (uint16_t)byte_count)
-        {
+        if ((uint16_t)((count + 7u) / 8u) != (uint16_t)byte_count){
             return MB_EXC_REGS_QUANT;   /* 声明的字节数与线圈个数对不上 */
         }
         break;
 
     case MB_FC_WRITE_REGS:
-        if (count < 1u || count > MB_MAX_WRITE_REGS)
-        {
+        if (count < 1u || count > MB_MAX_WRITE_REGS){
             return MB_EXC_REGS_QUANT;
         }
-        if ((uint16_t)(count * 2u) != (uint16_t)byte_count)
-        {
+        if ((uint16_t)(count * 2u) != (uint16_t)byte_count){
             return MB_EXC_REGS_QUANT;   /* 声明的字节数与寄存器个数对不上 */
         }
         break;
@@ -185,12 +165,10 @@ mb_err_t mb_frame_validate_request(mb_frame_t *f, const mb_map_t *map)
     area   = mb_area_for_fc(fc);
     region = mb_map_region(map, area);
 
-    if (region->data == NULL)
-    {
+    if (region->data == NULL){
         return MB_EXC_ADDR_RANGE;
     }
-    if (addr < region->start)
-    {
+    if (addr < region->start){
         return MB_EXC_ADDR_RANGE;
     }
 
@@ -198,54 +176,45 @@ mb_err_t mb_frame_validate_request(mb_frame_t *f, const mb_map_t *map)
          ? (uint32_t)region->count * 16u
          : (uint32_t)region->count;
 
-    if ((uint32_t)addr + (uint32_t)quantity > (uint32_t)region->start + span)
-    {
+    if ((uint32_t)addr + (uint32_t)quantity > (uint32_t)region->start + span){
         return MB_EXC_ADDR_RANGE;
     }
 
     return MB_OK;
 }
 
-mb_err_t mb_frame_validate_answer(mb_frame_t *f)
-{
+mb_err_t mb_frame_validate_answer(mb_frame_t *f){
     uint8_t fc;
     uint8_t byte_count;
 
-    if (f == NULL || f->len < MB_READ_ACK_MIN_LEN)
-    {
+    if (f == NULL || f->len < MB_READ_ACK_MIN_LEN){
         return MB_ERR_BAD_SIZE;
     }
-    if (!mb_frame_crc_ok(f))
-    {
+    if (!mb_frame_crc_ok(f)){
         return MB_ERR_BAD_CRC;
     }
 
     fc = f->buf[MB_F_FUNC];
 
     /* 功能码最高位为 1 表示异常应答：长度固定，异常码只允许 1..4。 */
-    if ((fc & 0x80u) != 0u)
-    {
-        if (f->len != (uint16_t)(MB_F_EXCEPTION_SIZE + 2u))
-        {
+    if ((fc & 0x80u) != 0u){
+        if (f->len != (uint16_t)(MB_F_EXCEPTION_SIZE + 2u)){
             return MB_ERR_BAD_SIZE;
         }
-        if (f->buf[MB_F_ADD_HI] < 1u || f->buf[MB_F_ADD_HI] > 4u)
-        {
+        if (f->buf[MB_F_ADD_HI] < 1u || f->buf[MB_F_ADD_HI] > 4u){
             return MB_ERR_BAD_SIZE;
         }
         return MB_ERR_EXCEPTION;
     }
 
-    switch (fc)
-    {
+    switch (fc){
     case MB_FC_READ_COILS:
     case MB_FC_READ_DISCRETE_INPUTS:
     case MB_FC_READ_HOLDING_REGS:
     case MB_FC_READ_INPUT_REGS:
         /* 读应答第 3 字节是"之后的字节数"，整帧长度必须自洽。 */
         byte_count = f->buf[MB_F_ACK_BYTES];
-        if (byte_count == 0u || f->len != (uint16_t)(MB_READ_ACK_MIN_LEN + byte_count))
-        {
+        if (byte_count == 0u || f->len != (uint16_t)(MB_READ_ACK_MIN_LEN + byte_count)){
             return MB_ERR_BAD_SIZE;
         }
         break;
@@ -255,8 +224,7 @@ mb_err_t mb_frame_validate_answer(mb_frame_t *f)
     case MB_FC_WRITE_COILS:
     case MB_FC_WRITE_REGS:
         /* 写应答回显 6 字节（地址 + 功能码 + 地址 + 数量/取值）。 */
-        if (f->len != (uint16_t)(MB_F_RESPONSE_SIZE + 2u))
-        {
+        if (f->len != (uint16_t)(MB_F_RESPONSE_SIZE + 2u)){
             return MB_ERR_BAD_SIZE;
         }
         break;
@@ -268,10 +236,8 @@ mb_err_t mb_frame_validate_answer(mb_frame_t *f)
     return MB_OK;
 }
 
-void mb_frame_build_exception(mb_frame_t *f, uint8_t exception_byte)
-{
-    if (f == NULL || f->len < MB_F_EXCEPTION_SIZE)
-    {
+void mb_frame_build_exception(mb_frame_t *f, uint8_t exception_byte){
+    if (f == NULL || f->len < MB_F_EXCEPTION_SIZE){
         return;
     }
 
@@ -280,74 +246,61 @@ void mb_frame_build_exception(mb_frame_t *f, uint8_t exception_byte)
     f->len              = (uint16_t)MB_F_EXCEPTION_SIZE;         /* CRC 由 mb_frame_seal() 补 */
 }
 
-mb_err_t mb_frame_build_query(mb_frame_t *f, const mb_query_t *q)
-{
+mb_err_t mb_frame_build_query(mb_frame_t *f, const mb_query_t *q){
     uint8_t  fc;
     uint16_t count;
     uint16_t i;
     uint8_t  byte_count;
 
-    if (f == NULL || q == NULL)
-    {
+    if (f == NULL || q == NULL){
         return MB_ERR_BAD_CONFIG;
     }
-    if (q->slave_id == 0u)
-    {
+    if (q->slave_id == 0u){
         return MB_ERR_BAD_ROLE_ID;   /* 主机不能用广播地址发起查询 */
     }
-    if (q->slave_id > 247u)
-    {
+    if (q->slave_id > 247u){
         return MB_ERR_BAD_SLAVE_ID;
     }
-    if (q->data == NULL)
-    {
+    if (q->data == NULL){
         return MB_ERR_NO_DATA;       /* 读要接收缓冲区，写要数据来源 */
     }
 
     fc = q->fc;
     /* FC5/FC6 的"取值"来自 data[0]；其它功能码的 count 就是个数。 */
-    if (fc == MB_FC_WRITE_COIL)
-    {
+    if (fc == MB_FC_WRITE_COIL){
         count = (q->data[0] != 0u) ? MB_COIL_ON : MB_COIL_OFF;
     }
-    else if (fc == MB_FC_WRITE_REG)
-    {
+    else if (fc == MB_FC_WRITE_REG){
         count = q->data[0];
     }
-    else
-    {
+    else{
         count = q->count;
     }
 
     /* 数量/取值合法性与协议上限。 */
-    switch (fc)
-    {
+    switch (fc){
     case MB_FC_READ_COILS:
     case MB_FC_READ_DISCRETE_INPUTS:
-        if (count < 1u || count > MB_MAX_READ_BITS)
-        {
+        if (count < 1u || count > MB_MAX_READ_BITS){
             return MB_ERR_BAD_SIZE;
         }
         break;
 
     case MB_FC_READ_HOLDING_REGS:
     case MB_FC_READ_INPUT_REGS:
-        if (count < 1u || count > MB_MAX_READ_REGS)
-        {
+        if (count < 1u || count > MB_MAX_READ_REGS){
             return MB_ERR_BAD_SIZE;
         }
         break;
 
     case MB_FC_WRITE_COILS:
-        if (count < 1u || count > MB_MAX_WRITE_BITS)
-        {
+        if (count < 1u || count > MB_MAX_WRITE_BITS){
             return MB_ERR_BAD_SIZE;
         }
         break;
 
     case MB_FC_WRITE_REGS:
-        if (count < 1u || count > MB_MAX_WRITE_REGS)
-        {
+        if (count < 1u || count > MB_MAX_WRITE_REGS){
             return MB_ERR_BAD_SIZE;
         }
         break;
@@ -369,26 +322,21 @@ mb_err_t mb_frame_build_query(mb_frame_t *f, const mb_query_t *q)
     f->buf[MB_F_NB_LO]  = (uint8_t)(count & 0x00FFu);
     f->len              = (uint16_t)(MB_F_NB_LO + 1u);
 
-    if (fc == MB_FC_WRITE_COILS)
-    {
+    if (fc == MB_FC_WRITE_COILS){
         /* 位载荷：每 8 个线圈压成 1 字节，LSB 在前。 */
         byte_count = (uint8_t)((count + 7u) / 8u);
         f->buf[MB_F_BYTE_CNT] = byte_count;
 
-        for (i = 0u; i < (uint16_t)byte_count; i++)
-        {
+        for (i = 0u; i < (uint16_t)byte_count; i++){
             uint8_t  value = 0u;
             uint8_t  bit;
 
-            for (bit = 0u; bit < 8u; bit++)
-            {
+            for (bit = 0u; bit < 8u; bit++){
                 uint16_t coil = (uint16_t)(i * 8u + bit);
-                if (coil >= count)
-                {
+                if (coil >= count){
                     break;
                 }
-                if ((q->data[coil / 16u] & (uint16_t)(1u << (coil % 16u))) != 0u)
-                {
+                if ((q->data[coil / 16u] & (uint16_t)(1u << (coil % 16u))) != 0u){
                     value = (uint8_t)(value | (uint8_t)(1u << bit));
                 }
             }
@@ -396,14 +344,12 @@ mb_err_t mb_frame_build_query(mb_frame_t *f, const mb_query_t *q)
         }
         f->len = (uint16_t)(MB_F_BYTE_CNT + 1u + byte_count);
     }
-    else if (fc == MB_FC_WRITE_REGS)
-    {
+    else if (fc == MB_FC_WRITE_REGS){
         /* 寄存器载荷：每个寄存器 2 字节，高字节在前。 */
         byte_count = (uint8_t)(count * 2u);
         f->buf[MB_F_BYTE_CNT] = byte_count;
 
-        for (i = 0u; i < count; i++)
-        {
+        for (i = 0u; i < count; i++){
             f->buf[MB_F_BYTE_CNT + 1u + i * 2u] = (uint8_t)(q->data[i] >> 8);
             f->buf[MB_F_BYTE_CNT + 2u + i * 2u] = (uint8_t)(q->data[i] & 0x00FFu);
         }
@@ -413,35 +359,29 @@ mb_err_t mb_frame_build_query(mb_frame_t *f, const mb_query_t *q)
     return MB_OK;
 }
 
-mb_err_t mb_frame_decode_answer(mb_frame_t *f, uint16_t *dst, uint16_t dst_words)
-{
+mb_err_t mb_frame_decode_answer(mb_frame_t *f, uint16_t *dst, uint16_t dst_words){
     uint8_t  fc;
     uint8_t  byte_count;
     uint16_t words;
     uint16_t i;
 
-    if (f == NULL || dst == NULL)
-    {
+    if (f == NULL || dst == NULL){
         return MB_ERR_NO_DATA;
     }
 
     fc         = f->buf[MB_F_FUNC];
     byte_count = f->buf[MB_F_ACK_BYTES];
 
-    if (fc == MB_FC_READ_COILS || fc == MB_FC_READ_DISCRETE_INPUTS)
-    {
+    if (fc == MB_FC_READ_COILS || fc == MB_FC_READ_DISCRETE_INPUTS){
         /* 位数据按 LSB 在前逐位展开到 16 位字里。 */
-        if ((uint32_t)byte_count > (uint32_t)dst_words * 2u)
-        {
+        if ((uint32_t)byte_count > (uint32_t)dst_words * 2u){
             return MB_ERR_BAD_SIZE;
         }
 
-        for (i = 0u; i < dst_words; i++)
-        {
+        for (i = 0u; i < dst_words; i++){
             dst[i] = 0u;
         }
-        for (i = 0u; i < (uint16_t)byte_count; i++)
-        {
+        for (i = 0u; i < (uint16_t)byte_count; i++){
             uint16_t word  = (uint16_t)(i / 2u);
             uint8_t  shift = (uint8_t)((i % 2u) * 8u);
 
@@ -451,20 +391,16 @@ mb_err_t mb_frame_decode_answer(mb_frame_t *f, uint16_t *dst, uint16_t dst_words
         return MB_OK;
     }
 
-    if (fc == MB_FC_READ_HOLDING_REGS || fc == MB_FC_READ_INPUT_REGS)
-    {
+    if (fc == MB_FC_READ_HOLDING_REGS || fc == MB_FC_READ_INPUT_REGS){
         /* 寄存器数据按大端两两拼回 16 位字。 */
-        if ((byte_count % 2u) != 0u)
-        {
+        if ((byte_count % 2u) != 0u){
             return MB_ERR_BAD_SIZE;
         }
         words = (uint16_t)(byte_count / 2u);
-        if (words > dst_words)
-        {
+        if (words > dst_words){
             return MB_ERR_BAD_SIZE;
         }
-        for (i = 0u; i < words; i++)
-        {
+        for (i = 0u; i < words; i++){
             dst[i] = mb_word(f->buf[MB_F_ACK_BYTES + 1u + i * 2u],
                              f->buf[MB_F_ACK_BYTES + 2u + i * 2u]);
         }

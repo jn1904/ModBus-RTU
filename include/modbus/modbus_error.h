@@ -25,8 +25,7 @@
 extern "C" {
 #endif
 
-typedef enum mb_err
-{
+typedef enum mb_err{
     MB_OK = 0,
 
     /* --- Modbus 异常代码（也是异常响应字节） --- */
@@ -64,8 +63,7 @@ typedef enum mb_err
  * MB_CLASS_USAGE     : 应用误用了 API。
  * MB_CLASS_CONFIG    : mb_init() 拒绝了该配置。
  */
-typedef enum mb_err_class
-{
+typedef enum mb_err_class{
     MB_CLASS_OK = 0,
     MB_CLASS_PROTO_EXC,
     MB_CLASS_COMM,

@@ -71,8 +71,7 @@ extern "C" {
  * 功能码
  * ------------------------------------------------------------------- */
 
-typedef enum mb_fc
-{
+typedef enum mb_fc{
     MB_FC_READ_COILS          = 1,  /*!< 读取线圈                    */
     MB_FC_READ_DISCRETE_INPUTS= 2,  /*!< 读取离散输入                */
     MB_FC_READ_HOLDING_REGS   = 3,  /*!< 读取保持寄存器              */
@@ -90,8 +89,7 @@ typedef enum mb_fc
  * 最低有效位在前。
  * ------------------------------------------------------------------- */
 
-typedef struct mb_region
-{
+typedef struct mb_region{
     uint16_t *data;   /*!< 存储，NULL 表示该区域不存在 */
     uint16_t  start;  /*!< 区域第一个合法的 Modbus 地址；位区域的地址单位是“位” */
     uint16_t  count;  /*!< data[] 里 uint16_t 字的个数。
@@ -100,8 +98,7 @@ typedef struct mb_region
                            所以可寻址范围是 count * 16 个位 */
 } mb_region_t;
 
-typedef struct mb_map
-{
+typedef struct mb_map{
     mb_region_t coils;      /*!< FC1、FC5、FC15 */
     mb_region_t discrete;   /*!< FC2           */
     mb_region_t input;      /*!< FC4           */
@@ -124,8 +121,7 @@ void mb_map_shared(mb_map_t *map, uint16_t *regs, uint16_t count);
  * 私有的核心层中。
  * ------------------------------------------------------------------- */
 
-typedef struct mb_frame
-{
+typedef struct mb_frame{
     uint8_t  buf[MB_MAX_FRAME];
     uint16_t len;
 } mb_frame_t;
@@ -134,8 +130,7 @@ typedef struct mb_frame
  * 主站查询
  * ------------------------------------------------------------------- */
 
-typedef struct mb_query
-{
+typedef struct mb_query{
     uint8_t   slave_id;  /*!< 1..247 */
     uint8_t   fc;        /*!< mb_fc_t */
     uint16_t  addr;      /*!< 第一个线圈/寄存器地址 */
@@ -149,14 +144,12 @@ typedef struct mb_query
  * 配置
  * ------------------------------------------------------------------- */
 
-typedef enum mb_mode
-{
+typedef enum mb_mode{
     MB_MODE_SLAVE  = 0,
     MB_MODE_MASTER = 1,
 } mb_mode_t;
 
-typedef struct mb_cfg
-{
+typedef struct mb_cfg{
     mb_mode_t mode;
 
     /* 传输层。write() 在字节真正发送到总线上之前不能返回：
@@ -189,8 +182,7 @@ typedef struct mb_cfg
 
 typedef struct mb mb_t;
 
-struct mb
-{
+struct mb{
     mb_cfg_t cfg;              /*!< 配置副本 */
 
     /* 统计信息。 */

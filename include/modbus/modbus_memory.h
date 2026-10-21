@@ -21,8 +21,7 @@
 extern "C" {
 #endif
 
-typedef struct mb_memory
-{
+typedef struct mb_memory{
     uint8_t  buf[MB_MAX_FRAME]; /*!< 最后发送的帧 */
     uint16_t len;               /*!< buf 中捕获的字节数  */
     bool     overflow;          /*!< 一次传输未能容纳 */

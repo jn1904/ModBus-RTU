@@ -11,10 +11,8 @@
 
 #include "core/mb_core.h"
 
-mb_area_t mb_area_for_fc(uint8_t fc)
-{
-    switch (fc)
-    {
+mb_area_t mb_area_for_fc(uint8_t fc){
+    switch (fc){
     case MB_FC_READ_COILS:
     case MB_FC_WRITE_COIL:
     case MB_FC_WRITE_COILS:
@@ -28,27 +26,26 @@ mb_area_t mb_area_for_fc(uint8_t fc)
     }
 }
 
-const mb_region_t *mb_map_region(const mb_map_t *map, mb_area_t area)
-{
-    if (map == NULL)
-    {
+const mb_region_t *mb_map_region(const mb_map_t *map, mb_area_t area){
+    if (map == NULL){
         static const mb_region_t empty = { NULL, 0, 0 };
         return &empty;
     }
 
-    switch (area)
-    {
-    case MB_AREA_COILS:    return &map->coils;
-    case MB_AREA_DISCRETE: return &map->discrete;
-    case MB_AREA_INPUT:    return &map->input;
-    default:               return &map->holding;
+    switch (area){
+    case MB_AREA_COILS:
+        return &map->coils;
+    case MB_AREA_DISCRETE:
+        return &map->discrete;
+    case MB_AREA_INPUT:
+        return &map->input;
+    default:
+        return &map->holding;
     }
 }
 
-bool mb_map_has_any(const mb_map_t *map)
-{
-    if (map == NULL)
-    {
+bool mb_map_has_any(const mb_map_t *map){
+    if (map == NULL){
         return false;
     }
     return map->coils.data      != NULL
@@ -57,10 +54,8 @@ bool mb_map_has_any(const mb_map_t *map)
         || map->holding.data    != NULL;
 }
 
-void mb_map_shared(mb_map_t *map, uint16_t *regs, uint16_t count)
-{
-    if (map == NULL)
-    {
+void mb_map_shared(mb_map_t *map, uint16_t *regs, uint16_t count){
+    if (map == NULL){
         return;
     }
 

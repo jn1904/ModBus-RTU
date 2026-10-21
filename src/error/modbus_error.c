@@ -8,51 +8,40 @@
 
 static mb_err_hook_t s_errorHook = NULL;
 
-void mb_err_set_hook(mb_err_hook_t hook)
-{
+void mb_err_set_hook(mb_err_hook_t hook){
     s_errorHook = hook;
 }
 
-static void mb_err_notify(mb_err_t err, const char *where)
-{
-    if (s_errorHook != NULL)
-    {
+static void mb_err_notify(mb_err_t err, const char *where){
+    if (s_errorHook != NULL){
         s_errorHook(err, where);
     }
 }
 
-mb_err_t mb_err_fail(mb_err_t err, const char *where)
-{
+mb_err_t mb_err_fail(mb_err_t err, const char *where){
     mb_err_notify(err, where);
     return err;
 }
 
-mb_err_t mb_err_report(mb_err_t *last, uint16_t *count, mb_err_t err, const char *where)
-{
-    if (last != NULL)
-    {
+mb_err_t mb_err_report(mb_err_t *last, uint16_t *count, mb_err_t err, const char *where){
+    if (last != NULL){
         *last = err;
     }
-    if (count != NULL)
-    {
+    if (count != NULL){
         (*count)++;
     }
     mb_err_notify(err, where);
     return err;
 }
 
-void mb_err_clear(mb_err_t *last)
-{
-    if (last != NULL)
-    {
+void mb_err_clear(mb_err_t *last){
+    if (last != NULL){
         *last = MB_OK;
     }
 }
 
-mb_err_class_t mb_err_classify(mb_err_t err)
-{
-    switch (err)
-    {
+mb_err_class_t mb_err_classify(mb_err_t err){
+    switch (err){
     case MB_OK:
         return MB_CLASS_OK;
 
@@ -86,19 +75,15 @@ mb_err_class_t mb_err_classify(mb_err_t err)
     }
 }
 
-uint8_t mb_err_exception_byte(mb_err_t err)
-{
-    if (mb_err_classify(err) != MB_CLASS_PROTO_EXC)
-    {
+uint8_t mb_err_exception_byte(mb_err_t err){
+    if (mb_err_classify(err) != MB_CLASS_PROTO_EXC){
         return 0;
     }
     return (uint8_t)err;
 }
 
-const char *mb_err_str(mb_err_t err)
-{
-    switch (err)
-    {
+const char *mb_err_str(mb_err_t err){
+    switch (err){
     case MB_OK:                 return "OK";
     case MB_EXC_FUNC_CODE:      return "illegal function";
     case MB_EXC_ADDR_RANGE:     return "illegal data address";

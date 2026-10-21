@@ -11,10 +11,8 @@
 
 #include "modbus_memory.h"
 
-void mb_memory_init(mb_memory_t *m, mb_t *peer)
-{
-    if (m == NULL)
-    {
+void mb_memory_init(mb_memory_t *m, mb_t *peer){
+    if (m == NULL){
         return;
     }
 
@@ -22,10 +20,8 @@ void mb_memory_init(mb_memory_t *m, mb_t *peer)
     m->peer = peer;
 }
 
-void mb_memory_reset(mb_memory_t *m)
-{
-    if (m == NULL)
-    {
+void mb_memory_reset(mb_memory_t *m){
+    if (m == NULL){
         return;
     }
 
@@ -35,16 +31,13 @@ void mb_memory_reset(mb_memory_t *m)
     m->tx       = false;
 }
 
-int mb_memory_write(void *user, const uint8_t *buf, uint16_t len)
-{
+int mb_memory_write(void *user, const uint8_t *buf, uint16_t len){
     mb_memory_t *m = (mb_memory_t *)user;
 
-    if (m == NULL || buf == NULL)
-    {
+    if (m == NULL || buf == NULL){
         return -1;
     }
-    if (len > (uint16_t)MB_MAX_FRAME)
-    {
+    if (len > (uint16_t)MB_MAX_FRAME){
         /* 库不会发出超过 MB_MAX_FRAME 的帧，走到这里说明配置被改坏了。 */
         m->overflow = true;
         return -1;
@@ -53,8 +46,7 @@ int mb_memory_write(void *user, const uint8_t *buf, uint16_t len)
     memcpy(m->buf, buf, (size_t)len);
     m->len = len;
 
-    if (m->peer != NULL)
-    {
+    if (m->peer != NULL){
         /* 直接把字节推进对端的接收缓冲，等于"线"接在一起。 */
         mb_rx(m->peer, buf, len);
     }
@@ -62,12 +54,10 @@ int mb_memory_write(void *user, const uint8_t *buf, uint16_t len)
     return 0;
 }
 
-void mb_memory_set_tx(void *user, bool tx)
-{
+void mb_memory_set_tx(void *user, bool tx){
     mb_memory_t *m = (mb_memory_t *)user;
 
-    if (m != NULL)
-    {
+    if (m != NULL){
         m->tx = tx;
     }
 }

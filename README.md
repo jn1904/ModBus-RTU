@@ -96,8 +96,7 @@ static int      uart_write(void *u, const uint8_t *b, uint16_t n); /* 同步发�
 static void     uart_set_tx(void *u, bool tx);                     /* RS-485 方向，可为 NULL */
 static uint32_t tick_ms(void *u);                                  /* 单调毫秒时钟 */
 
-void slave_init(void)
-{
+void slave_init(void){
     mb_map_shared(&map, holding, 10);  /* 四个功能码组共享同一数组（经典单内存模型） */
 
     mb_cfg_t cfg = {
@@ -113,14 +112,12 @@ void slave_init(void)
 }
 
 /* UART 接收路径（中断 / 轮询 / CDC 回调，哪个都行） */
-void on_rx_bytes(const uint8_t *data, uint16_t len)
-{
+void on_rx_bytes(const uint8_t *data, uint16_t len){
     mb_rx(&mb, data, len);
 }
 
 /* 主循环，永不阻塞 */
-void main_loop(void)
-{
+void main_loop(void){
     for (;;)
         mb_poll(&mb);      /* T3.5 定帧 → 校验 → 执行功能码 → 回写应答 */
 }
@@ -138,8 +135,8 @@ mb_query_t q = {
     .data     = values,     /* 应答数据落这里；结果取走前必须保持有效 */
 };
 
-if (mb_master_send(&mb, &q) == MB_OK) {
-    for (;;) {
+if (mb_master_send(&mb, &q) == MB_OK){
+    for (;;){
         mb_poll(&mb);                       /* 推进发送 / 收应答 / 超时 */
         mb_err_t err;
         if (mb_master_done(&mb, &err))      /* 结果被本次调用消费 */
