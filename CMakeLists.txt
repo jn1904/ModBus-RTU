@@ -46,3 +46,22 @@ target_include_directories(modbus
 )
 
 target_compile_options(modbus PRIVATE ${MODBUS_WARNINGS})
+
+# ---------------------------------------------------------------------------
+# 测试：不需要硬件，也不需要网络。ctest 直接跑 tests/test_modbus.c，
+# 靠 mb_memory_t 把主站与从站接在一起做回环，另有 core 层的纯单元测试。
+# ---------------------------------------------------------------------------
+
+include(CTest)
+
+if(BUILD_TESTING)
+    add_executable(modbus_tests tests/test_modbus.c)
+
+    target_link_libraries(modbus_tests PRIVATE modbus)
+    # core 层（src/core、src/engine）是私有头，测试要直接调用它们，
+    # 所以把 src 也加进来；对外 API 仍走 modbus 目标的公共包含目录。
+    target_include_directories(modbus_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+    target_compile_options(modbus_tests PRIVATE ${MODBUS_WARNINGS})
+
+    add_test(NAME modbus COMMAND modbus_tests)
+endif()

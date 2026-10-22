@@ -50,11 +50,14 @@ ModBus-RTU/
 │   ├── modbus_config.h     #   编译期配置（帧长、T3.5、超时）
 │   ├── modbus_error.h      #   错误码、分级与诊断
 │   └── modbus_memory.h     #   内存传输（测试 / 仿真用）
-└── src/
-    ├── core/               # 协议核心：crc / frame / func / map（可独立单测）
-    ├── engine/             # 引擎：判帧、从站状态机、主站查询状态机
-    ├── error/              # 错误分类与上报
-    └── port/               # 内存传输实现
+├── src/
+│   ├── core/               # 协议核心：crc / frame / func / map（可独立单测）
+│   ├── engine/             # 引擎：判帧、从站状态机、主站查询状态机
+│   ├── error/              # 错误分类与上报
+│   └── port/               # 内存传输实现
+└── tests/
+    ├── test_modbus.c       # 本机测试：core 单测 + 内存回环（CTest 注册）
+    └── stm32f407ve/        # STM32F407VE 板端自测（独立交叉编译工程）
 ```
 
 ## 构建
@@ -63,7 +66,29 @@ ModBus-RTU/
 cmake -S . -B build
 cmake --build build
 # 产物：build/libmodbus.a
+
+ctest --test-dir build --output-on-failure   # 跑本机测试
+# 或直接执行：build/modbus_tests
 ```
+
+本机测试不依赖硬件、也不依赖操作系统：core 层用例直接调用协议函数，
+联调用例用 `mb_memory_t` 把主站与从站接在一起，假时钟推进 T3.5 与超时。
+
+### 在 STM32F407VE 上跑板端自测
+
+`tests/stm32f407ve/` 是一个**独立**的交叉编译工程（只用 ARM GCC，不依赖 CMSIS/HAL/CubeMX），
+把协议栈放到 Cortex-M4 上跑一遍：内存回环覆盖 6 个功能码（FC1/3/5/6/15/16）与异常/广播/静默/超时，
+再用一根 PA9–PA10 跳线做真实 UART 自环。
+
+```bash
+cmake -S tests/stm32f407ve -B build-stm32f407ve \
+      -DCMAKE_TOOLCHAIN_FILE=tests/stm32f407ve/cmake/arm-none-eabi.cmake
+cmake --build build-stm32f407ve
+cmake --build build-stm32f407ve --target flash   # 接了 ST-Link 时
+```
+
+接线、烧录、预期输出，以及在没有硬件的机器上能验证到什么，见
+[tests/stm32f407ve/README.md](tests/stm32f407ve/README.md)。
 
 MSVC 下启用 `/W4 /WX`，GCC/Clang 下启用 `-Wall -Wextra -Wpedantic -Werror`；不想把告警当错误可加 `-DMODBUS_WERROR=OFF`。
 
@@ -191,9 +216,9 @@ if (mb_master_send(&mb, &q) == MB_OK){
 
 ## 路线图
 
-- [ ] `tests/`：core 层脱离平台的单元测试（CTest 注册）
-- [ ] `examples/`：从站 / 主站示例 + 内存回环演示
-- [ ] 演示材料：主从抓包 / 逻辑分析仪波形截图
+- [x] `tests/`：core 层脱离平台的单元测试（CTest 注册）
+- [x] `tests/stm32f407ve/`：Cortex-M4 板端自测（交叉编译 + 内存回环 + UART 自环）
+
 
 ## 许可
 
