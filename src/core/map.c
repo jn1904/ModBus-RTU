@@ -9,6 +9,8 @@
  * 经典的单一内存模型，其中线圈和寄存器共享字。
  */
 
+#include <stddef.h>
+
 #include "core/mb_core.h"
 
 mb_area_t mb_area_for_fc(uint8_t fc){

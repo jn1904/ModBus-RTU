@@ -4,6 +4,8 @@
  * 错误分类、记录与诊断。
  */
 
+#include <stddef.h>
+
 #include "modbus_error.h"
 
 static mb_err_hook_t s_errorHook = NULL;

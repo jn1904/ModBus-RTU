@@ -8,6 +8,8 @@
  * 方通过 mb_frame_seal() 追加一次，避免同一帧被盖上两遍 CRC（会让整帧失效）。
  */
 
+#include <stddef.h>
+
 #include "core/mb_core.h"
 
 /* 协议规定的单次访问上限（参见 Modbus Application Protocol V1.1b3）。 */

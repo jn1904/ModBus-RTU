@@ -10,6 +10,8 @@
  *   mb_master_done()         由应用调用一次，把结果取走。
  */
 
+#include <stddef.h>
+
 #include "core/mb_core.h"
 #include "engine/engine.h"
 

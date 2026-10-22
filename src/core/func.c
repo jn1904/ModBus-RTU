@@ -8,6 +8,8 @@
  * 数量、帧长都是可信的，可以直接按 count 访问内存。离开时帧里还没有 CRC。
  */
 
+#include <stddef.h>
+
 #include "core/mb_core.h"
 
 /* 位操作：把 Modbus 地址折算成"映像里第几个字、字第几位"。 */
